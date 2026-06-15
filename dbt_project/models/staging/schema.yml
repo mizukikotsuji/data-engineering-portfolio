@@ -1,0 +1,37 @@
+version: 2
+
+models:
+  - name: stg_ga4_events
+    description: "GA4生データのクレンジング・整形済みテーブル"
+    columns:
+      - name: user_pseudo_id
+        description: "GA4のCookie ID"
+        tests:
+          - not_null
+      - name: event_name
+        description: "イベント種別"
+        tests:
+          - not_null
+
+  - name: mart_cart_abandonment
+    description: "カゴ落ちユーザー抽出マート"
+    columns:
+      - name: user_pseudo_id
+        tests:
+          - not_null
+
+  - name: mart_ltv_funnel
+    description: "LTV×購買ファネルマート"
+    columns:
+      - name: user_pseudo_id
+        tests:
+          - not_null
+          - unique
+
+  - name: mart_id_resolution
+    description: "IDリゾリューションマート"
+    columns:
+      - name: user_pseudo_id
+        tests:
+          - not_null
+          - unique
