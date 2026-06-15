@@ -1,0 +1,54 @@
+name: dbt run
+
+on:
+  schedule:
+    - cron: '0 16 * * *'  # 毎日UTC 16:00（日本時間1:00）に実行
+  workflow_dispatch:        # 手動実行（リラン）も可能
+
+jobs:
+  dbt-run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dbt
+        run: pip install dbt-bigquery
+
+      - name: Set up GCP credentials
+        run: |
+          echo "${{ secrets.GCP_SA_KEY }}" > /tmp/keyfile.json
+
+      - name: Set up dbt profiles
+        run: |
+          mkdir -p ~/.dbt
+          cat > ~/.dbt/profiles.yml << 'PROFILE'
+          dbt_project:
+            outputs:
+              dev:
+                type: bigquery
+                method: service-account
+                keyfile: /tmp/keyfile.json
+                project: mizuki-analytics
+                dataset: dbt_mart
+                threads: 1
+                job_execution_timeout_seconds: 300
+                location: US
+            target: dev
+          PROFILE
+
+      - name: dbt run
+        working-directory: dbt_project
+        run: dbt run
+        timeout-minutes: 30
+
+      - name: dbt test
+        working-directory: dbt_project
+        run: dbt test
+        timeout-minutes: 10
