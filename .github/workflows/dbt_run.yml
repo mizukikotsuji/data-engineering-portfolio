@@ -11,30 +11,29 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Install dbt
         run: pip install dbt-bigquery
 
-      - name: Set up GCP credentials
-        run: |
-          echo "${{ secrets.GCP_SA_KEY }}" > /tmp/keyfile.json
+      - name: Write GCP credentials file
+        run: echo '${{ secrets.GCP_SA_KEY }}' > $HOME/gcp-key.json
 
       - name: Set up dbt profiles
         run: |
           mkdir -p ~/.dbt
-          cat > ~/.dbt/profiles.yml << 'PROFILE'
+          cat > ~/.dbt/profiles.yml <<'PROFILE'
           dbt_project:
             outputs:
               dev:
                 type: bigquery
                 method: service-account
-                keyfile: /tmp/keyfile.json
+                keyfile: KEYFILE_PATH
                 project: mizuki-analytics
                 dataset: dbt_mart
                 threads: 1
@@ -42,6 +41,7 @@ jobs:
                 location: US
             target: dev
           PROFILE
+          sed -i "s|KEYFILE_PATH|$HOME/gcp-key.json|" ~/.dbt/profiles.yml
 
       - name: dbt run
         working-directory: dbt_project
