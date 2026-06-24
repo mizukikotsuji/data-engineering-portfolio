@@ -224,3 +224,4 @@ dbt_project/.user.yml
 
 # 認証情報
 *.json
+rag/venv/
